@@ -40,6 +40,8 @@ RUN /build/install.sh && \
     /build/system_services.sh && \
     /build/cleanup.sh
 
+ADD /dist/confd /confd
+
 # Copy in our custom configuration files etc. We do this last to speed up
 # builds for developer, as it's thing they're most likely to change.
 COPY node_filesystem /

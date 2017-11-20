@@ -16,9 +16,6 @@ $minimal_apt_get_install apt-transport-https ca-certificates
 # Install add-apt-repository
 $minimal_apt_get_install software-properties-common
 
-# Install curl, needed below for manual BIRD install.
-$minimal_apt_get_install curl
-
 # Find the list of packages just installed - these can be deleted later.
 grep -Fxvf  /tmp/base.txt <(dpkg -l | grep ^ii | sed 's_  _\t_g' | cut \
 -f 2) >/tmp/add-apt.txt
@@ -34,10 +31,6 @@ apt-get update
 $minimal_apt_get_install \
         bird \
         bird6
-
-# Install Confd
-curl -L https://github.com/projectcalico/confd/releases/download/v0.12.1-calico0.2.0/confd -o confd
-chmod +x confd
 
 # Create the config directory for confd
 mkdir config
