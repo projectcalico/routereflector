@@ -39,14 +39,14 @@ release: clean
 ifndef VERSION
 	$(error VERSION is undefined - run using make release VERSION=vX.Y.Z)
 endif
+	# Check for uncommitted changes.
+	if git describe --always --dirty | grep dirty; \
+	then echo "Current git working tree has uncommitted changes. Commit, stash or discard those before releasing." ;false; fi
+
 	git tag $(VERSION)
 
-	# Check to make sure the tag isn't "-dirty".
-	if git describe --tags --dirty | grep dirty; \
-	then echo current git working tree is "dirty". Make sure you do not have any uncommitted changes ;false; fi
-
 	# Build docker image.
-	$(MAKE)
+	$(MAKE) calicorr.created
 
 	# Retag images with correct version and quay
 	docker tag calico/routereflector calico/routereflector:$(VERSION)
