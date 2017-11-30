@@ -16,6 +16,8 @@ calicorr.created: $(BUILD_FILES) dist/confd
 clean:
 	-rm *.created
 	-rm -rf dist
+	-docker rmi -f calico/routereflector
+	-docker rmi -f quay.io/calico/routereflector
 
 dist/confd: dist
 	-docker rm -f calico-confd
@@ -32,3 +34,45 @@ dist/confd: dist
 
 dist:
 	mkdir -p dist
+
+release: clean
+ifndef VERSION
+	$(error VERSION is undefined - run using make release VERSION=vX.Y.Z)
+endif
+	git tag $(VERSION)
+
+	# Check to make sure the tag isn't "-dirty".
+	if git describe --tags --dirty | grep dirty; \
+	then echo current git working tree is "dirty". Make sure you do not have any uncommitted changes ;false; fi
+
+	# Build docker image.
+	$(MAKE)
+
+	# Retag images with correct version and quay
+	docker tag calico/routereflector calico/routereflector:$(VERSION)
+	docker tag calico/routereflector quay.io/calico/routereflector:$(VERSION)
+	docker tag calico/routereflector quay.io/calico/routereflector:latest
+
+	# Check that images were created recently and that the IDs of the versioned and latest images match
+	@docker images --format "{{.CreatedAt}}\tID:{{.ID}}\t{{.Repository}}:{{.Tag}}" calico/routereflector
+	@docker images --format "{{.CreatedAt}}\tID:{{.ID}}\t{{.Repository}}:{{.Tag}}" calico/routereflector:$(VERSION)
+
+	@echo ""
+	@echo "# Push the created tag to GitHub"
+	@echo "  git push origin $(VERSION)"
+	@echo ""
+	@echo "# Now, create a GitHub release from the tag, and add release notes."
+	@echo "# To find commit messages for the release notes:  git log --oneline <old_release_version>...$(VERSION)"
+	@echo ""
+	@echo "# Now push the newly created release images."
+	@echo ""
+	@echo "  docker push calico/routereflector:$(VERSION)"
+	@echo "  docker push quay.io/calico/routereflector:$(VERSION)"
+	@echo ""
+	@echo "# For the final release only, push the latest tag"
+	@echo "# DO NOT PUSH THESE IMAGES FOR RELEASE CANDIDATES OR ALPHA RELEASES"
+	@echo ""
+	@echo "  docker push calico/routereflector:latest"
+	@echo "  docker push quay.io/calico/routereflector:latest"
+	@echo ""
+	@echo "See RELEASING.md for detailed instructions."
