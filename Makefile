@@ -4,7 +4,7 @@
 LOCAL_IP_ENV?=$(shell ip route get 8.8.8.8 | head -1 | cut -d' ' -f8)
 
 CONFD_REPO?=calico/confd
-CONFD_VER?=v1.0.0-beta1-4-g4619952
+CONFD_VER?=v1.0.0-beta1-6-g47ad71a
 CONFD_CONTAINER_NAME=${CONFD_REPO}:${CONFD_VER}
 
 default: clean calicorr.created
