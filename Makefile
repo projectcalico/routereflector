@@ -1,3 +1,16 @@
+###############################################################################
+# The build architecture is select by setting the ARCH variable.
+# # For example: When building on ppc64le you could use ARCH=ppc64le make <....>.
+# # When ARCH is undefined it defaults to amd64.
+ARCH?=amd64
+ifeq ($(ARCH),amd64)
+	ARCHTAG?=
+endif
+
+ifeq ($(ARCH),ppc64le)
+	ARCHTAG:=-ppc64le
+endif
+
 .PHONEY: clean
 
 # These variables can be overridden by setting an environment variable.
@@ -10,7 +23,7 @@ CONFD_CONTAINER_NAME=${CONFD_REPO}:${CONFD_VER}
 default: clean calicorr.created
 
 calicorr.created: $(BUILD_FILES) dist/confd
-	docker build -t calico/routereflector .
+	docker build -t calico/routereflector$(ARCHTAG) -f Dockerfile$(ARCHTAG) .
 	touch calicorr.created
 
 clean:
