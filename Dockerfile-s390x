@@ -14,6 +14,11 @@
 
 # For details and docs - see https://github.com/phusion/baseimage-docker#getting_started
 
+# The Dockerfile-s390x is copied from routereflector/Dockerfile.
+# Modifications done includes:
+# 1) Base image has been changed from ubuntu:14.04 to s390x/ubuntu:16.04
+# 2) Added python3-minimal dependency
+
 FROM s390x/ubuntu:16.04
 
 RUN apt-get update && \
