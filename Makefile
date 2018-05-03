@@ -23,7 +23,7 @@ CONFD_CONTAINER_NAME=${CONFD_REPO}:${CONFD_VER}
 default: clean calicorr.created
 
 calicorr.created: $(BUILD_FILES) dist/confd
-	docker build -t calico/routereflector$(ARCHTAG) -f Dockerfile$(ARCHTAG) .
+	docker build $(DOCKER_EXTRA_BUILD_ARGS) -t calico/routereflector$(ARCHTAG) -f Dockerfile$(ARCHTAG) .
 	touch calicorr.created
 
 clean:
@@ -59,7 +59,7 @@ endif
 	git tag $(VERSION)
 
 	# Build docker image.
-	$(MAKE) calicorr.created
+	$(MAKE) calicorr.created DOCKER_EXTRA_BUILD_ARGS="--pull"
 
 	# Retag images with correct version and quay
 	docker tag calico/routereflector calico/routereflector:$(VERSION)
