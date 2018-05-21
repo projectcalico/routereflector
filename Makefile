@@ -11,6 +11,10 @@ ifeq ($(ARCH),ppc64le)
 	ARCHTAG:=-ppc64le
 endif
 
+ifeq ($(ARCH),s390x)
+	ARCHTAG:=-s390x
+endif
+
 .PHONEY: clean
 
 # These variables can be overridden by setting an environment variable.
