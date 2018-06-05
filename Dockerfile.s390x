@@ -1,5 +1,4 @@
 # Copyright 2015 Tigera, Inc
-# Copyright IBM Corp. 2017
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,10 +14,15 @@
 
 # For details and docs - see https://github.com/phusion/baseimage-docker#getting_started
 
-FROM ppc64le/ubuntu:16.04
+# The Dockerfile-s390x is copied from routereflector/Dockerfile.
+# Modifications done includes:
+# 1) Base image has been changed from ubuntu:14.04 to s390x/ubuntu:16.04
+# 2) Added python3-minimal dependency
+
+FROM s390x/ubuntu:16.04
 
 RUN apt-get update && \
-	apt-get install -y python3-minimal
+        apt-get install -y python3-minimal && rm -rf /var/lib/apt/lists/*
 
 CMD ["/sbin/my_init"]
 
@@ -29,23 +33,22 @@ ENV HOME /root
 # The early scripts take a long time to run but change infrequently so
 # putting them on a their own lines allow developers to take advantage of
 # Docker's layer caching. The downside is much larger images.
-# ADD /image/buildconfig /build/buildconfig
-# ADD /image/my_init /build/my_init
-# ADD /image/confd /build/confd
-# ADD /image/install.sh /build/install.sh
-# RUN /build/install.sh
-# ADD /image/system_services.sh /build/system_services.sh
-# RUN	/build/system_services.sh
-# ADD /image/cleanup.sh /build/cleanup.sh
-# RUN	/build/cleanup.sh
+#ADD /image/buildconfig /build/buildconfig
+#ADD /image/my_init /build/my_init
+#ADD /image/install.sh /build/install.sh
+#RUN /build/install.sh
+#ADD /image/system_services.sh /build/system_services.sh
+#RUN	/build/system_services.sh
+#ADD /image/cleanup.sh /build/cleanup.sh
+#RUN	/build/cleanup.sh
 
 # Comment these lines out if using the developer-focused alternative instead.
 ADD /image /build
 RUN /build/install.sh && \
-	/build/system_services.sh && \
-	/build/cleanup.sh
+    /build/system_services.sh && \
+    /build/cleanup.sh
 
-ADD /dist/confd /confd
+ADD /dist/confd-s390x /confd
 
 # Copy in our custom configuration files etc. We do this last to speed up
 # builds for developer, as it's thing they're most likely to change.

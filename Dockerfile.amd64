@@ -14,15 +14,7 @@
 
 # For details and docs - see https://github.com/phusion/baseimage-docker#getting_started
 
-# The Dockerfile-s390x is copied from routereflector/Dockerfile.
-# Modifications done includes:
-# 1) Base image has been changed from ubuntu:14.04 to s390x/ubuntu:16.04
-# 2) Added python3-minimal dependency
-
-FROM s390x/ubuntu:16.04
-
-RUN apt-get update && \
-        apt-get install -y python3-minimal && rm -rf /var/lib/apt/lists/*
+FROM ubuntu:14.04
 
 CMD ["/sbin/my_init"]
 
@@ -48,7 +40,7 @@ RUN /build/install.sh && \
     /build/system_services.sh && \
     /build/cleanup.sh
 
-ADD /dist/confd /confd
+ADD /dist/confd-amd64 /confd
 
 # Copy in our custom configuration files etc. We do this last to speed up
 # builds for developer, as it's thing they're most likely to change.
