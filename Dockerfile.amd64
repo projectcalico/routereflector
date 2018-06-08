@@ -14,7 +14,7 @@
 
 # For details and docs - see https://github.com/phusion/baseimage-docker#getting_started
 
-FROM ubuntu:14.04
+FROM ubuntu:16.04
 
 CMD ["/sbin/my_init"]
 
