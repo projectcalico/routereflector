@@ -35,7 +35,7 @@ ifeq ($(ARCH),x86_64)
 endif
 
 CONTAINER_NAME=calico/routereflector
-GO_BUILD_VER ?= v0.15
+GO_BUILD_VER ?= v0.16
 
 
 .PHONY: clean image
