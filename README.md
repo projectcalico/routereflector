@@ -158,3 +158,106 @@ Where:
 When using Kubernetes API as the datastore, this route reflector image only works
 as a single standalone reflector.
 
+## Running a kubernetes sidecar container that interacts with routereflector
+
+The control sockets for `bird` and `bird6` are opened in the `/sockets/` folder of the container. This allows us to share the sockets accross containers in the same kubernetes pod easily. One nice case would be to expose metrics using another open source project called [bird_exporter](https://github.com/czerwonk/bird_exporter)
+
+We can do this ***fairly*** easily using a kubernetes an `emptyDir` kubernetes volume.
+
+This example creates a deployment of a single pod containing two containers (`calico-reflector` and `calico-reflector-metrics`). They interact with each other using the controll sockets of `bird` and `bird6` by mounting a kubernetes `emptyVolume` on both container filesystems. (You'll need to provide an ETCD cluster and specify the values for *IP* and *ETCD_ENDPOINTS* for your environment)
+
+The advantage of doing it this way means we can avoid bloat in the `routereflector` image for customers that don't need this functionality and make this reasonably easy to expand to different use cases.
+
+```yaml
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: calico-bgp-reflector-1
+  namespace: kube-system
+  labels:
+    calico-component: bgp-reflector
+    k8s-app: calico-bgp-reflector-1
+  annotations:
+    scheduler.alpha.kubernetes.io/critical-pod: ''
+spec:
+  selector:
+    matchLabels:
+      calico-component: bgp-reflector
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      name: calico-bgp-reflector-1
+      namespace: kube-system
+      labels:
+        k8s-app: calico-bgp-reflector-1
+        calico-component: bgp-reflector
+    spec:
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: calico-component
+                operator: In
+                values:
+                - bgp-reflector
+            topologyKey: "kubernetes.io/hostname"
+      hostNetwork: true
+      volumes:
+      - name: socketsshare
+        emptyDir: {}
+      containers:
+      - name: calico-reflector
+        volumeMounts:
+        - name: socketsshare
+          mountPath: /sockets
+        image: calico/routereflector
+        securityContext:
+          privileged: true
+        env:
+          - name: IP
+            value: "<YOURIP>"
+          - name: ETCD_ENDPOINTS
+            value: <"ETCD_ADDRESS>"
+      - name: calico-reflector-metrics
+        volumeMounts:
+        - name: socketsshare
+          mountPath: /sockets
+        image: czerwonk/bird_exporter
+        command: ["./bird_exporter"]
+        args:
+        - "-format.new=true"
+        - "-bird.socket=/sockets/bird.ctl"
+        - "-bird.socket6=/sockets/bird6.ctl"
+...
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: kube-system
+  labels:
+    k8s-app: calico-bgp-reflector-1
+  name: calico-bgp-reflector-1
+spec:
+  ports:
+  - port: 179
+    protocol: TCP
+    targetPort: 179
+    name: bgp-tcp
+  - port: 179
+    protocol: UDP
+    targetPort: 179
+    name: bgp-udp
+  - port: 9324
+    protocol: TCP
+    targetPort: 9234
+    name: metrics
+  selector:
+    k8s-app: calico-bgp-reflector-1
+  type: ClusterIP
+...
+```
