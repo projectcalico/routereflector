@@ -1,4 +1,4 @@
-# Calico Docker BIRD Route Reflector image
+# [Deprecated] Calico Docker BIRD Route Reflector image
 
 ## Introduction
 
